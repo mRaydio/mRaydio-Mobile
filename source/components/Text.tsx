@@ -71,6 +71,22 @@ const Text: React.FC<TextProps> = ({
   );
 };
 
+export const TitleText: React.FC<TextProps> = ({children, style, onPress}) => {
+  const styles = StyleSheet.create({
+    text: {
+      fontFamily: 'Montserrat-Bold',
+      fontSize: 30,
+      ...style,
+    },
+  });
+
+  return (
+    <Text onPress={onPress} style={styles.text}>
+      {children}
+    </Text>
+  );
+};
+
 export const BigTextB: React.FC<TextProps> = ({children, style, onPress}) => {
   const styles = StyleSheet.create({
     text: {
@@ -114,8 +130,8 @@ export const MediumText: React.FC<TextProps> = ({
 }) => {
   const styles = StyleSheet.create({
     text: {
-      fontFamily: 'Gilroy-SemiBold',
-      fontSize: 25,
+      fontFamily: 'Montserrat-SemiBold',
+      fontSize: 27,
       ...style,
     },
   });
@@ -169,8 +185,8 @@ export const RegularText: React.FC<TextProps> = ({
 }) => {
   const styles = StyleSheet.create({
     text: {
-      fontFamily: 'Gilroy-SemiBold',
-      fontSize: 15,
+      fontFamily: 'Montserrat-Medium',
+      fontSize: 17,
       ...style,
     },
   });
@@ -200,8 +216,8 @@ export const SmallText: React.FC<TextProps> = ({
 }) => {
   const styles = StyleSheet.create({
     text: {
-      fontFamily: 'Gilroy-Medium',
-      fontSize: 13,
+      fontFamily: 'Montserrat-Medium',
+      fontSize: 12,
       ...style,
     },
   });

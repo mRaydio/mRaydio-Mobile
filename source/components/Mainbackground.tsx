@@ -12,6 +12,7 @@ import React, {useEffect, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {DeviceEventEmitter} from 'react-native';
 import Colors from '../constants/Colors';
+import {SCREEN_HEIGHT} from 'constants/Variables';
 
 interface MainBackgroundProps {
   children: React.ReactNode;
@@ -67,7 +68,6 @@ const Mainbackground: React.FC<MainBackgroundProps> = ({
         behavior={avoid && Platform.OS === 'ios' ? 'padding' : androidAvoid}
         style={{
           flex: 1,
-
           paddingTop: noti ? 0 : top ? top : insets.top,
         }}>
         <View

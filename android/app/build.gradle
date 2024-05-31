@@ -78,9 +78,9 @@ android {
 	sourceCompatibility JavaVersion.VERSION_1_8
 	targetCompatibility JavaVersion.VERSION_1_8
 }
-    namespace "com.app"
+    namespace "com.mraydio"
     defaultConfig {
-        applicationId "com.app"
+        applicationId "com.mraydio"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

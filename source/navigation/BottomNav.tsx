@@ -9,6 +9,11 @@ import {PermissionsAndroid, Platform} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import TestScreen from '../screens/TestScreen';
+import HomeScreen from 'features/bottomtabs/home/HomeScreen';
+import Icon, {Icons} from 'components/Icons';
+import SearchScreen from 'features/bottomtabs/search/SearchScreen';
+import ProfileScreen from 'features/bottomtabs/profile/ProfileScreen';
+import DiscoverScreen from 'features/bottomtabs/discover/DiscoverScreen';
 
 export type RootStackParamList = {
   Shop: {searchPassed?: string};
@@ -100,31 +105,66 @@ export default function BottomNav() {
     header: () => null,
     tabBarHideOnKeyboard: true,
     tabBarActiveTintColor: Colors.primary,
-    // tabBarInactiveTintColor: Colors.tabBlur,
+    tabBarInactiveTintColor: Colors.tabBlur,
     tabBarLabelStyle: {
-      fontFamily: 'Gilroy-Medium',
+      fontFamily: 'Montserrat-Medium',
       fontSize: 12,
     },
     tabBarStyle: {
       height: Platform.OS === 'android' ? 60 : 55 + insets.bottom,
       paddingBottom: Platform.OS === 'android' ? 5 : insets.bottom - 5,
       paddingTop: Platform.OS === 'ios' ? 5 : 0,
-      // backgroundColor: Colors.tabColor,
+      backgroundColor: Colors.bg,
       borderTopWidth: 0,
     },
   };
   return (
     <Tab.Navigator backBehavior="history" screenOptions={screenOptions}>
       <Tab.Screen
-        options={
-          {
-            // tabBarIcon: ({color}) => (
-            //   <ShopSvg width={23} height={23} color={color} />
-            // ),
-          }
-        }
-        name="TestScreen"
-        component={TestScreen}
+        options={{
+          tabBarIcon: ({color}) => (
+            <Icon size={22} type={Icons.Feather} name={'home'} color={color} />
+          ),
+        }}
+        name="Home"
+        component={HomeScreen}
+      />
+      <Tab.Screen
+        options={{
+          tabBarIcon: ({color}) => (
+            <Icon size={22} type={Icons.Feather} name={'radio'} color={color} />
+          ),
+        }}
+        name="Discover"
+        component={DiscoverScreen}
+      />
+      <Tab.Screen
+        name="Search"
+        options={{
+          tabBarIcon: ({color}) => (
+            <Icon
+              size={23}
+              type={Icons.Feather}
+              name={'search'}
+              color={color}
+            />
+          ),
+        }}
+        component={SearchScreen}
+      />
+      <Tab.Screen
+        options={{
+          tabBarIcon: ({color}) => (
+            <Icon
+              size={22}
+              type={Icons.Octicons}
+              name={'person'}
+              color={color}
+            />
+          ),
+        }}
+        name="Profile"
+        component={ProfileScreen}
       />
     </Tab.Navigator>
   );

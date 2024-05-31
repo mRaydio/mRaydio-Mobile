@@ -6,6 +6,7 @@ import {
 } from '@react-navigation/native-stack';
 import {Linking} from 'react-native';
 import BottomNav from './BottomNav';
+import OnboardingScreen from 'features/auth/screens/OnboardingScreen';
 
 interface DeepLinkResult {
   product_id: string;
@@ -43,6 +44,8 @@ const StackNav = () => {
       screenOptions={{
         header: () => null,
       }}>
+      <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
+
       <Stack.Screen name="BottomNav" component={BottomNav} />
     </Stack.Navigator>
   );
