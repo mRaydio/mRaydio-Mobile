@@ -1,18 +1,24 @@
-import {Animated, Platform, StatusBar, View} from 'react-native';
-import React, {useRef} from 'react';
+import {Animated, Platform, StatusBar, UIManager, View} from 'react-native';
+import React, {useEffect, useRef} from 'react';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import {QueryClient} from '@tanstack/react-query';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import Notification from './source/components/Notification';
 import {NavigationContainer} from '@react-navigation/native';
 import StackNav from './source/navigation/StackNav';
+import {PersistQueryClientProvider} from '@tanstack/react-query-persist-client';
+import {clientPersister} from 'services/storage';
+import TrackPlayer from 'react-native-track-player';
 
 if (Platform.OS === 'android') {
   StatusBar.setBackgroundColor('transparent');
   StatusBar.setTranslucent(true);
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
 }
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 
 const App = () => {
   const transY = useRef(new Animated.Value(0)).current;
@@ -30,11 +36,20 @@ const App = () => {
     }).start();
   };
 
+  useEffect(() => {
+    const init = async () => {
+      await TrackPlayer.setupPlayer();
+    };
+    init();
+  }, []);
+
   const onReady = () => {
     // BootSplash.hide();
   };
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{persister: clientPersister}}>
       <GestureHandlerRootView
         style={{
           flex: 1,
@@ -52,7 +67,7 @@ const App = () => {
           </Animated.View>
         </SafeAreaProvider>
       </GestureHandlerRootView>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 };
 

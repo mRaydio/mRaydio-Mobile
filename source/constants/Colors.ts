@@ -6,4 +6,5 @@ export default {
   bg: '#181725',
   tabBlur: '#7b8493',
   dim: '#627079',
+  lightpurple: '#201f2f',
 };

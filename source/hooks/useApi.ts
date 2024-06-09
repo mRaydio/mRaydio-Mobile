@@ -1,7 +1,6 @@
 import {useNavigation} from '@react-navigation/native';
 import {useInfiniteQuery, useQuery} from '@tanstack/react-query';
-import {deleteItem} from '../utilis/storage';
-import messaging from '@react-native-firebase/messaging';
+import {deleteItem} from 'services/storage';
 
 interface UseApiProps<TData, TError> {
   queryKey: unknown[];
@@ -29,11 +28,8 @@ export const useApi = <TData, TError>({
               routes: [{name: 'OnboardingScreen'}],
             });
             deleteItem('userdetails');
-            deleteItem('cart');
-            deleteItem('favourites');
             deleteItem('unreadNotification');
             deleteItem('token');
-            messaging().unsubscribeFromTopic('newproduct');
           }
           break;
         default:

@@ -39,6 +39,8 @@
 	<string></string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need access to your microphone to record audio for adding voice memos to your videos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Give $(PRODUCT_NAME) permission to view photos</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Montserrat-Black.ttf</string>

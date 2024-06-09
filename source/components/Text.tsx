@@ -106,7 +106,7 @@ export const BigTextB: React.FC<TextProps> = ({children, style, onPress}) => {
 export const BigText: React.FC<TextProps> = ({children, style, onPress}) => {
   const styles = StyleSheet.create({
     text: {
-      fontFamily: 'Gilroy-SemiBold',
+      fontFamily: 'Montserrat-Bold',
       fontSize: 30,
       ...style,
     },
@@ -158,7 +158,7 @@ export const RegularTextB: React.FC<TextProps> = ({
 }) => {
   const styles = StyleSheet.create({
     text: {
-      fontFamily: 'Gilroy-Bold',
+      fontFamily: 'Montserrat-Bold',
       fontSize: 17,
       ...style,
     },

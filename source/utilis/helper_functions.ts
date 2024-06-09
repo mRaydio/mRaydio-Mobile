@@ -1,8 +1,16 @@
-import {DeviceEventEmitter} from 'react-native';
+import {DeviceEventEmitter, LayoutAnimation} from 'react-native';
 import {SCREEN_HEIGHT, SCREEN_WIDTH} from '../constants/Variables';
 import countryData from '../constants/output.json';
 import citiesData from '../constants/lgas.json';
 
+export const layoutAnimate = () => {
+  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+};
+export const catchError = err => {
+  console.log('=== ERROR ====\n', err?.response.data);
+  const {message, error} = err?.response?.data ?? {};
+  showNotification({msg: message || error, error: true});
+};
 export const getPercentHeight = (percent: number) => {
   return (percent / 100) * SCREEN_HEIGHT;
 };

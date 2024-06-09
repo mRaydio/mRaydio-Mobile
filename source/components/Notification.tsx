@@ -5,7 +5,7 @@ import Colors from '../constants/Colors';
 import {StatusBar} from 'react-native';
 import {Platform} from 'react-native';
 import {DeviceEventEmitter} from 'react-native';
-import {RegularText} from './Text';
+import {RegularText, SmallText} from './Text';
 import Check from '../assets/svg/notification_icon/check.svg';
 import Error from '../assets/svg/notification_icon/error.svg';
 import {SCREEN_WIDTH} from '../constants/Variables';
@@ -105,9 +105,10 @@ const Notification: React.FC<NotificationProps> = ({goDown, goUp}) => {
         }}
         onPress={closeNotification}>
         {error ? <Error /> : <Check />}
-        <RegularText style={{color: 'white', marginLeft: 15, flex: 1}}>
+        <SmallText
+          style={{color: 'white', marginLeft: 15, flex: 1, fontSize: 14}}>
           {msg ? msg : 'An unknown error occurred!'}
-        </RegularText>
+        </SmallText>
       </TouchableOpacity>
     </Animated.View>
   );

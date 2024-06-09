@@ -39,19 +39,7 @@ const Mainbackground: React.FC<MainBackgroundProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const [noti, setNoti] = useState(false);
-  useEffect(() => {
-    const myEventListener = DeviceEventEmitter.addListener(
-      'openNotification',
-      event => {
-        setNoti(true);
-        setTimeout(() => {
-          setNoti(false);
-        }, 3500);
-      },
-    );
 
-    return () => myEventListener.remove();
-  }, []);
   return (
     <Pressable
       disabled={!keyboard}
