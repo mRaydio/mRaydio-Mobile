@@ -30,6 +30,7 @@ import {
   eventSender,
   roomMetadataUpdater,
 } from '../utilis/helper';
+import {ws} from 'api/base';
 
 const TrackVolume = ({room, stationName}) => {
   const {send} = eventSender(room);
@@ -298,6 +299,12 @@ const TrackItem = ({item, stationName, index, room}) => {
   );
 };
 const Tracks = ({stationName, item}) => {
+  useEffect(() => {
+    ws.onmessage = e => {
+      // a message was received
+      console.log(e.data);
+    };
+  }, []);
   const room = useRoomContext();
   const {data} = useApi({
     queryFn: getTracks,

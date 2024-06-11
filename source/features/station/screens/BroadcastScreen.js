@@ -1,12 +1,14 @@
 import {
   ActivityIndicator,
+  Animated,
+  FlatList,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Mainbackground from 'components/Mainbackground';
 
 import {
@@ -95,6 +97,7 @@ const Broadcast = ({name, picture, stationName}) => {
     });
     room.on('connected', () => {
       setNumViewers(room.numParticipants);
+      setMuted(!localParticipant.isMicrophoneEnabled);
     });
     room.on('participantDisconnected', () => {
       setNumViewers(room.numParticipants);
@@ -135,7 +138,9 @@ const Broadcast = ({name, picture, stationName}) => {
             <RegularText dim>{name}</RegularText>
           </View>
 
-          <SmallText>Listeners: {numViewers - 1}</SmallText>
+          <SmallText>
+            Listeners: {numViewers - 1 < 0 ? 0 : numViewers - 1}
+          </SmallText>
         </View>
 
         <View
@@ -175,8 +180,8 @@ const BroadcastScreen = ({route}) => {
     queryFn: getStationToken,
   });
   const {token} = data ?? {};
-  const [sel, setSel] = useState(0);
-
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const flatRef = useRef();
   useEffect(() => {
     let connect = async () => {
       let outputs = await AudioSession.getAudioOutputs();
@@ -193,6 +198,25 @@ const BroadcastScreen = ({route}) => {
       AudioSession.stopAudioSession();
     };
   }, []);
+
+  const Screens = [
+    <Broadcast {...{name, picture, stationName}} />,
+    <Tracks stationName={stationName} item={route.params} />,
+  ];
+
+  const RenderItem = ({item}) => {
+    console.log(item);
+    return (
+      <View
+        style={{
+          height: '100%',
+          width: SCREEN_WIDTH,
+        }}>
+        {Screens[item]}
+      </View>
+    );
+  };
+
   return (
     <Mainbackground>
       {token ? (
@@ -214,8 +238,8 @@ const BroadcastScreen = ({route}) => {
             }}>
             <BackButton bottom={0} />
             <Selector
-              index={sel}
-              setIndex={setSel}
+              flatRef={flatRef}
+              scrollX={scrollX}
               data={[
                 {title: 'Broadcast'},
                 {title: 'Tracks'},
@@ -224,11 +248,25 @@ const BroadcastScreen = ({route}) => {
             />
             <View />
           </View>
-          {sel === 0 ? (
+          <FlatList
+            ref={flatRef}
+            horizontal
+            snapToInterval={SCREEN_WIDTH}
+            bounces={false}
+            decelerationRate={'fast'}
+            showsHorizontalScrollIndicator={false}
+            onScroll={Animated.event(
+              [{nativeEvent: {contentOffset: {x: scrollX}}}],
+              {useNativeDriver: false},
+            )}
+            data={[0, 1]}
+            renderItem={RenderItem}
+          />
+          {/* {sel === 0 ? (
             <Broadcast {...{name, picture, stationName}} />
           ) : sel === 1 ? (
             <Tracks stationName={stationName} item={route.params} />
-          ) : null}
+          ) : null} */}
           <RoomView token={token} />
           <ConnectionState />
         </LiveKitRoom>

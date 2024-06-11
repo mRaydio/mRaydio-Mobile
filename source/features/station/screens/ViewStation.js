@@ -1,5 +1,11 @@
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Animated,
+  FlatList,
+} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
 import Mainbackground from 'components/Mainbackground';
 import {getStationToken, getStations, getTracks} from 'api/stations';
 import {useApi} from 'hooks/useApi';
@@ -24,7 +30,6 @@ import {ConnectionState} from '../components/ConnectionState';
 import LottieView from 'lottie-react-native';
 import {useCurrentStation} from 'services/store';
 import {playTrackFromMeta} from '../utilis/helper';
-import Animated from 'react-native-reanimated';
 
 const RoomView = ({token}) => {
   const room = useRoomContext();
@@ -169,6 +174,45 @@ const StationControls = ({
   );
 };
 
+const Station = ({
+  picture,
+  stationName,
+  name,
+  setCurrentStation,
+  setStationName,
+}) => {
+  return (
+    <>
+      <FastImage
+        source={{uri: picture}}
+        sharedTransitionTag="tag"
+        style={{
+          height: SCREEN_WIDTH - 40,
+          width: SCREEN_WIDTH - 40,
+          alignSelf: 'center',
+          borderRadius: 15,
+          backgroundColor: Colors.lightpurple,
+        }}
+      />
+      <View style={{padding: 20}}>
+        <BigText style={{fontSize: 40}}>{stationName}</BigText>
+        <RegularText dim>{name}</RegularText>
+      </View>
+      <View style={{flex: 0.5}} />
+      <StationControls
+        {...{
+          setCurrentStation,
+          setIndex,
+          setStationName,
+          index,
+          stationsList,
+          token,
+        }}
+      />
+      <View style={{flex: 1}} />
+    </>
+  );
+};
 const ViewStation = ({route}) => {
   const [sel, setSel] = useState(0);
 
@@ -237,10 +281,30 @@ const ViewStation = ({route}) => {
       await AudioSession.startAudioSession();
     };
     connect();
-    // return () => {
-    //   AudioSession.stopAudioSession();
-    // };
   }, []);
+
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const flatRef = useRef();
+
+  const Screens = [
+    <Station
+      {...{name, picture, stationName, setCurrentStation, setStationName}}
+    />,
+  ];
+
+  const RenderItem = ({item}) => {
+    console.log(item);
+    return (
+      <View
+        style={{
+          height: '100%',
+          width: SCREEN_WIDTH,
+        }}>
+        {Screens[item]}
+      </View>
+    );
+  };
+
   return (
     <Mainbackground style={{flex: 1, backgroundColor: Colors.bg}}>
       <View
@@ -252,41 +316,27 @@ const ViewStation = ({route}) => {
         }}>
         <BackButton bottom={0} />
         <Selector
-          index={sel}
-          setIndex={setSel}
+          flatRef={flatRef}
+          scrollX={scrollX}
           data={[{title: 'Station'}, {title: 'Live Chat'}]}
         />
         <View />
       </View>
-      <Animated.Image
-        source={{uri: picture}}
-        sharedTransitionTag="tag"
-        style={{
-          height: SCREEN_WIDTH - 40,
-          width: SCREEN_WIDTH - 40,
-          alignSelf: 'center',
-          borderRadius: 15,
-          backgroundColor: Colors.lightpurple,
-        }}
+      <FlatList
+        ref={flatRef}
+        horizontal
+        snapToInterval={SCREEN_WIDTH}
+        bounces={false}
+        decelerationRate={'fast'}
+        showsHorizontalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{nativeEvent: {contentOffset: {x: scrollX}}}],
+          {useNativeDriver: false},
+        )}
+        data={[0, 1]}
+        renderItem={RenderItem}
       />
 
-      <View style={{padding: 20}}>
-        <BigText style={{fontSize: 40}}>{stationName}</BigText>
-        <RegularText dim>{name}</RegularText>
-      </View>
-      <View style={{flex: 0.5}} />
-
-      <StationControls
-        {...{
-          setCurrentStation,
-          setIndex,
-          setStationName,
-          index,
-          stationsList,
-          token,
-        }}
-      />
-      <View style={{flex: 1}} />
       <ConnectionState />
       <RoomView token={token} />
     </Mainbackground>
