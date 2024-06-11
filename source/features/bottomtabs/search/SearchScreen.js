@@ -2,6 +2,7 @@ import {StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import Mainbackground from 'components/Mainbackground';
 import Search from './components/Search';
+import CurrentStation from 'components/CurrentStation';
 
 const SearchScreen = () => {
   return (
@@ -9,6 +10,7 @@ const SearchScreen = () => {
       <View style={{paddingHorizontal: 20, paddingTop: 25}}>
         <Search />
       </View>
+      <CurrentStation />
     </Mainbackground>
   );
 };

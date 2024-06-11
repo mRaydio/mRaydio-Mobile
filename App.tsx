@@ -1,4 +1,11 @@
-import {Animated, Platform, StatusBar, UIManager, View} from 'react-native';
+import {
+  Animated,
+  LogBox,
+  Platform,
+  StatusBar,
+  UIManager,
+  View,
+} from 'react-native';
 import React, {useEffect, useRef} from 'react';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {QueryClient} from '@tanstack/react-query';
@@ -9,6 +16,9 @@ import StackNav from './source/navigation/StackNav';
 import {PersistQueryClientProvider} from '@tanstack/react-query-persist-client';
 import {clientPersister} from 'services/storage';
 import TrackPlayer from 'react-native-track-player';
+import {LiveKitRoom} from '@livekit/react-native';
+import {LIVEKIT_URL} from '@env';
+import {useCurrentStation} from 'services/store';
 
 if (Platform.OS === 'android') {
   StatusBar.setBackgroundColor('transparent');
@@ -18,6 +28,7 @@ if (Platform.OS === 'android') {
   }
 }
 
+LogBox.ignoreAllLogs();
 export const queryClient = new QueryClient();
 
 const App = () => {
@@ -36,6 +47,7 @@ const App = () => {
     }).start();
   };
 
+  const token = useCurrentStation(state => state.token);
   useEffect(() => {
     const init = async () => {
       await TrackPlayer.setupPlayer();
@@ -46,6 +58,7 @@ const App = () => {
   const onReady = () => {
     // BootSplash.hide();
   };
+
   return (
     <PersistQueryClientProvider
       client={queryClient}
@@ -62,7 +75,14 @@ const App = () => {
               transform: [{translateY: transY}],
             }}>
             <NavigationContainer onReady={onReady}>
-              <StackNav />
+              <LiveKitRoom
+                connect={!!token}
+                serverUrl={LIVEKIT_URL}
+                token={token}
+                audio={false}
+                video={false}>
+                <StackNav />
+              </LiveKitRoom>
             </NavigationContainer>
           </Animated.View>
         </SafeAreaProvider>

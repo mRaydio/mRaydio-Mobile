@@ -1,47 +1,30 @@
-import {
-  ActivityIndicator,
-  Animated,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import Mainbackground from 'components/Mainbackground';
 import {getStationToken, getStations, getTracks} from 'api/stations';
 import {useApi} from 'hooks/useApi';
 import {
   AndroidAudioTypePresets,
   AudioSession,
-  LiveKitRoom,
   useIOSAudioManagement,
-  useIsMuted,
   useLocalParticipant,
   useRoomContext,
-  useTracks,
 } from '@livekit/react-native';
-import {Track} from 'livekit-client';
-
 import {LIVEKIT_URL} from '@env';
-import {BigText, MediumText, RegularText, SmallText} from 'components/Text';
-import Button from 'components/Button';
-import {pick, types} from 'react-native-document-picker';
-import Input from 'components/Input';
+import {BigText, RegularText, SmallText} from 'components/Text';
 import FastImage from 'react-native-fast-image';
-import {getPercentWidth} from 'utilis/helper_functions';
 import Icon, {Icons} from 'components/Icons';
 import Colors from 'constants/Colors';
-import {SCREEN_HEIGHT, SCREEN_WIDTH} from 'constants/Variables';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useMMKVString} from 'react-native-mmkv';
+import {SCREEN_WIDTH} from 'constants/Variables';
 import {BackButton} from 'components/IconButton';
 import Selector from 'components/Selector';
 import TrackPlayer from 'react-native-track-player';
 import {eventhandler} from '../utilis/eventhandler';
 import {ConnectionState} from '../components/ConnectionState';
 import LottieView from 'lottie-react-native';
+import {useCurrentStation} from 'services/store';
+import {playTrackFromMeta} from '../utilis/helper';
+import Animated from 'react-native-reanimated';
 
 const RoomView = ({token}) => {
   const room = useRoomContext();
@@ -52,11 +35,9 @@ const RoomView = ({token}) => {
   useEffect(() => {
     const connect = async () => {
       await room.connect(LIVEKIT_URL, token, {});
+      await playTrackFromMeta(room.metadata);
     };
     connect();
-    return () => {
-      room.disconnect();
-    };
   }, [token]);
 
   useEffect(() => {
@@ -73,15 +54,20 @@ const StationControls = ({
   setCurrentStation,
   stationsList,
   index,
+  token,
 }) => {
+  const [connected, setConnected] = useState(true);
+  const room = useRoomContext();
+
   const next = () => {
     let nextIndex = index + 1;
     if (nextIndex >= stationsList?.stations.length) {
       nextIndex = 0;
     }
+    room.disconnect();
     setStationName(stationsList?.stations[nextIndex].stationName);
     setIndex(nextIndex);
-    setCurrentStation(JSON.stringify(stationsList.stations[nextIndex]));
+    setCurrentStation(stationsList?.stations[nextIndex]);
   };
 
   const prev = () => {
@@ -90,9 +76,28 @@ const StationControls = ({
     if (nextIndex < 0) {
       nextIndex = stationsList?.stations.length - 1;
     }
+    room.disconnect();
     setStationName(stationsList?.stations[nextIndex].stationName);
     setIndex(nextIndex);
-    setCurrentStation(JSON.stringify(stationsList.stations[nextIndex]));
+    setCurrentStation(stationsList?.stations[nextIndex]);
+  };
+
+  const connect = async () => {
+    await room.connect(LIVEKIT_URL, token, {});
+    await playTrackFromMeta(room.metadata);
+  };
+
+  const toggleConnect = async () => {
+    setConnected(prev => {
+      if (prev) {
+        room.disconnect();
+        TrackPlayer.reset();
+      } else {
+        connect();
+      }
+
+      return !prev;
+    });
   };
 
   return (
@@ -120,7 +125,8 @@ const StationControls = ({
         />
       </TouchableOpacity>
 
-      <View
+      <TouchableOpacity
+        onPress={toggleConnect}
         style={{
           backgroundColor: Colors.primary,
           width: 70,
@@ -129,13 +135,19 @@ const StationControls = ({
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <LottieView
+        <Icon
+          type={Icons.Entypo}
+          name={connected ? 'controller-stop' : 'controller-play'}
+          color={'white'}
+          size={24}
+        />
+        {/* <LottieView
           source={require('../assets/lottie/wave.json')}
           autoPlay
           loop
-          style={{width: 70, height: 70}}
-        />
-      </View>
+          style={{width: 100, height: 70}}
+        /> */}
+      </TouchableOpacity>
 
       <TouchableOpacity
         onPress={next}
@@ -160,11 +172,13 @@ const StationControls = ({
 const ViewStation = ({route}) => {
   const [sel, setSel] = useState(0);
 
-  const [currentStation, setCurrentStation] = useMMKVString('currentStation');
-  const {picture, name} = JSON.parse(currentStation ?? '{}');
+  const currentStation = useCurrentStation(state => state.currentStation);
+  const setCurrentStation = useCurrentStation(state => state.setCurrentStation);
+  const updateToken = useCurrentStation(state => state.updateToken);
 
+  const {picture, name} = currentStation;
   console.log('currentStation', currentStation);
-  const [stationName, setStationName] = useState('95.1');
+  const [stationName, setStationName] = useState('102.3');
   const [index, setIndex] = useState(0);
   const {data} = useApi({
     queryKey: [`getStationToken`, stationName],
@@ -175,6 +189,8 @@ const ViewStation = ({route}) => {
     queryFn: getStations,
     queryKey: ['getStations'],
   });
+
+  console.log('stationsList', stationsList);
 
   const {data: stationTracks} = useApi({
     queryFn: getTracks,
@@ -199,10 +215,17 @@ const ViewStation = ({route}) => {
         return data.stationName === stationName;
       });
       setIndex(currInd);
-      setCurrentStation(JSON.stringify(stationsList.stations[currInd]));
+      setCurrentStation(stationsList.stations[currInd]);
     }
   }, [stationsList]);
   const {token} = data ?? {};
+
+  useEffect(() => {
+    if (token) {
+      console.log('updating token', token);
+      updateToken(token);
+    }
+  }, [token]);
 
   useEffect(() => {
     let connect = async () => {
@@ -214,70 +237,58 @@ const ViewStation = ({route}) => {
       await AudioSession.startAudioSession();
     };
     connect();
-    return () => {
-      AudioSession.stopAudioSession();
-    };
+    // return () => {
+    //   AudioSession.stopAudioSession();
+    // };
   }, []);
-
   return (
     <Mainbackground style={{flex: 1, backgroundColor: Colors.bg}}>
-      {token ? (
-        <LiveKitRoom
-          serverUrl={LIVEKIT_URL}
-          token={token}
-          connect={!!token}
-          audio={false}
-          video={false}>
-          <View
-            style={{
-              flexDirection: 'row',
-              padding: 20,
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <BackButton bottom={0} />
-            <Selector
-              index={sel}
-              setIndex={setSel}
-              data={[{title: 'Station'}, {title: 'Live Chat'}]}
-            />
-            <View />
-          </View>
-          <FastImage
-            source={{uri: picture}}
-            style={{
-              height: SCREEN_WIDTH - 40,
-              width: SCREEN_WIDTH - 40,
-              alignSelf: 'center',
-              borderRadius: 15,
-              backgroundColor: Colors.lightpurple,
-            }}
-          />
+      <View
+        style={{
+          flexDirection: 'row',
+          padding: 20,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+        <BackButton bottom={0} />
+        <Selector
+          index={sel}
+          setIndex={setSel}
+          data={[{title: 'Station'}, {title: 'Live Chat'}]}
+        />
+        <View />
+      </View>
+      <Animated.Image
+        source={{uri: picture}}
+        sharedTransitionTag="tag"
+        style={{
+          height: SCREEN_WIDTH - 40,
+          width: SCREEN_WIDTH - 40,
+          alignSelf: 'center',
+          borderRadius: 15,
+          backgroundColor: Colors.lightpurple,
+        }}
+      />
 
-          <View style={{padding: 20}}>
-            <BigText style={{fontSize: 40}}>{stationName}</BigText>
-            <RegularText dim>{name}</RegularText>
-          </View>
-          <View style={{flex: 0.5}} />
+      <View style={{padding: 20}}>
+        <BigText style={{fontSize: 40}}>{stationName}</BigText>
+        <RegularText dim>{name}</RegularText>
+      </View>
+      <View style={{flex: 0.5}} />
 
-          <StationControls
-            {...{
-              setCurrentStation,
-              setIndex,
-              setStationName,
-              index,
-              stationsList,
-            }}
-          />
-          <View style={{flex: 1}} />
-          <ConnectionState />
-          <RoomView token={token} />
-        </LiveKitRoom>
-      ) : (
-        <View style={{flex: 1, justifyContent: 'center'}}>
-          <ActivityIndicator color={Colors.primary} />
-        </View>
-      )}
+      <StationControls
+        {...{
+          setCurrentStation,
+          setIndex,
+          setStationName,
+          index,
+          stationsList,
+          token,
+        }}
+      />
+      <View style={{flex: 1}} />
+      <ConnectionState />
+      <RoomView token={token} />
     </Mainbackground>
   );
 };

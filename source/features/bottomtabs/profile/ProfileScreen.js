@@ -6,6 +6,7 @@ import ProfilePic from 'components/ProfilePic';
 import Colors from 'constants/Colors';
 import {useNavigation} from '@react-navigation/native';
 import {getItem} from 'services/storage';
+import CurrentStation from 'components/CurrentStation';
 
 const heartimg = require('images/profile/heart.png');
 const radioimg = require('images/profile/radio.png');
@@ -71,6 +72,7 @@ const ProfileScreen = () => {
         </View>
         <ActionButtons />
       </View>
+      <CurrentStation />
     </Mainbackground>
   );
 };

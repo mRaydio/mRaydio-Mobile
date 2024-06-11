@@ -25,9 +25,13 @@ import Slider from '@react-native-community/slider';
 import {SCREEN_WIDTH} from 'constants/Variables';
 import TrackPlayer, {useProgress} from 'react-native-track-player';
 import {useRoomContext} from '@livekit/react-native';
-import {eventSender} from '../utilis/helper';
+import {
+  clearRoommeta,
+  eventSender,
+  roomMetadataUpdater,
+} from '../utilis/helper';
 
-const TrackVolume = ({room}) => {
+const TrackVolume = ({room, stationName}) => {
   const {send} = eventSender(room);
 
   return (
@@ -47,9 +51,10 @@ const TrackVolume = ({room}) => {
             <Slider
               value={0.03}
               style={{
-                width: Platform.OS === 'ios' ? '200%' : SCREEN_WIDTH - 60,
+                width: Platform.OS === 'ios' ? '200%' : (SCREEN_WIDTH - 60) / 2,
                 height: 30,
                 alignSelf: 'center',
+                left: Platform.OS === 'android' ? -2 : 0,
               }}
               minimumValue={0}
               tapToSeek
@@ -78,9 +83,10 @@ const TrackVolume = ({room}) => {
             <Slider
               value={1}
               style={{
-                width: Platform.OS === 'ios' ? '200%' : SCREEN_WIDTH - 60,
+                width: Platform.OS === 'ios' ? '200%' : (SCREEN_WIDTH - 60) / 2,
                 height: 30,
                 alignSelf: 'center',
+                left: Platform.OS === 'android' ? -5 : 0,
               }}
               minimumValue={0}
               tapToSeek
@@ -90,6 +96,14 @@ const TrackVolume = ({room}) => {
               thumbTintColor="white"
               onSlidingComplete={value => {
                 console.log(value);
+                roomMetadataUpdater(
+                  room,
+                  {
+                    volume: value,
+                  },
+                  stationName,
+                );
+
                 send({data: {volume: value}, event: 'TRACK_VOLUME'});
               }}
             />
@@ -104,23 +118,28 @@ const TrackVolume = ({room}) => {
     </View>
   );
 };
-const TrackAction = ({
-  url,
-  stationName,
-  index,
-  isPlaying,
-  setIsplaying,
-  room,
-}) => {
+
+const TrackAction = ({stationName, index, isPlaying, setIsplaying, room}) => {
   const {send} = eventSender(room);
   const play = async () => {
     try {
+      roomMetadataUpdater(
+        room,
+        {
+          index,
+          progress: (await TrackPlayer.getProgress()).position,
+          startTime: Date.now(),
+        },
+        stationName,
+      );
+
       send({
         event: 'PLAY_TRACK',
         data: {
           index,
         },
       });
+
       const trackIndex = await TrackPlayer.getActiveTrackIndex();
       if (trackIndex !== index) {
         await TrackPlayer.skip(index);
@@ -131,11 +150,6 @@ const TrackAction = ({
       setIsplaying(true);
 
       return;
-      startTrack({stationName, url})
-        .then(data => {
-          console.log('d', data.data);
-        })
-        .catch(catchError);
     } catch (err) {
       console.log(err);
     }
@@ -145,6 +159,7 @@ const TrackAction = ({
     send({
       event: 'PAUSE_TRACK',
     });
+    clearRoommeta(stationName);
     TrackPlayer.pause();
     setIsplaying(false);
   };
@@ -153,6 +168,7 @@ const TrackAction = ({
     send({
       event: 'STOP_TRACK',
     });
+    clearRoommeta(stationName);
     TrackPlayer.stop();
     setIsplaying(false);
   };
@@ -206,12 +222,6 @@ const TrackItem = ({item, stationName, index, room}) => {
   const progress = useProgress();
   const [isPlaying, setIsplaying] = useState(false);
   const {send} = eventSender(room);
-
-  // useEffect(() => {
-  //   setInterval(() => {
-  //     setProgress(prev => prev + 0.1);
-  //   }, 1000);
-  // }, [progress]);
   return (
     <View
       style={{
@@ -264,6 +274,15 @@ const TrackItem = ({item, stationName, index, room}) => {
               thumbTintColor="white"
               onSlidingComplete={value => {
                 console.log(value);
+                roomMetadataUpdater(
+                  room,
+                  {
+                    progress: value,
+                    startTime: Date.now(),
+                  },
+                  stationName,
+                );
+
                 send({
                   event: 'SEEK_TRACK',
                   data: {position: value},
@@ -272,7 +291,7 @@ const TrackItem = ({item, stationName, index, room}) => {
               }}
             />
           </View>
-          <TrackVolume {...{room}} />
+          <TrackVolume {...{room, stationName}} />
         </View>
       )}
     </View>
@@ -322,10 +341,7 @@ const Tracks = ({stationName, item}) => {
       catchError(err);
     }
   };
-  const [tracks, setTracks] = useState([
-    {name: 'Standy by me'},
-    // {name: 'Standy by me'},
-  ]);
+  const [tracks, setTracks] = useState([]);
   return (
     <View style={{marginBottom: 30, padding: 20}}>
       <StationMiniView {...{...item}} />

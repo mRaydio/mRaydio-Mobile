@@ -37,7 +37,7 @@ export const eventhandler = async payload => {
       break;
     }
     case 'TRACK_VOLUME': {
-      await TrackPlayer.seekTo(data.position);
+      await TrackPlayer.setVolume(data.volume);
 
       break;
     }

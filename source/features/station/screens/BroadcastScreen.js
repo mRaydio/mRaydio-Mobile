@@ -24,7 +24,7 @@ import {useApi} from 'hooks/useApi';
 import Input from 'components/Input';
 import FastImage from 'react-native-fast-image';
 import {SCREEN_WIDTH} from 'constants/Variables';
-import {BigText, RegularText} from 'components/Text';
+import {BigText, RegularText, SmallText} from 'components/Text';
 import Colors from 'constants/Colors';
 import PageHeader from 'components/PageHeader';
 import Icon, {Icons} from 'components/Icons';
@@ -68,11 +68,11 @@ const LiveChat = () => {
 
 const RoomView = ({token}) => {
   const room = useRoomContext();
-  const {localParticipant} = useLocalParticipant({room});
   useIOSAudioManagement(room);
   useEffect(() => {
     const connect = async () => {
       await room.connect(LIVEKIT_URL, token, {});
+      room.console.log('roo', room.metadata);
     };
     connect();
     return () => {
@@ -80,6 +80,92 @@ const RoomView = ({token}) => {
     };
   }, []);
   return <View />;
+};
+
+const Broadcast = ({name, picture, stationName}) => {
+  const [numViewers, setNumViewers] = useState(1);
+  const room = useRoomContext();
+  const {localParticipant} = useLocalParticipant({room});
+  const [muted, setMuted] = useState(!localParticipant.isMicrophoneEnabled);
+
+  useEffect(() => {
+    setNumViewers(room.numParticipants);
+    room.on('participantConnected', () => {
+      setNumViewers(room.numParticipants);
+    });
+    room.on('connected', () => {
+      setNumViewers(room.numParticipants);
+    });
+    room.on('participantDisconnected', () => {
+      setNumViewers(room.numParticipants);
+    });
+    room.on('reconnected', () => {
+      setNumViewers(room.numParticipants);
+    });
+  }, []);
+
+  const toggleMic = () => {
+    setMuted(prev => {
+      localParticipant.setMicrophoneEnabled(prev);
+      return !prev;
+    });
+  };
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <FastImage
+        source={{uri: picture}}
+        style={{
+          height: SCREEN_WIDTH - 40,
+          width: SCREEN_WIDTH - 40,
+          alignSelf: 'center',
+          borderRadius: 15,
+          backgroundColor: Colors.lightpurple,
+          marginTop: 10,
+        }}
+      />
+      <View style={{padding: 20}}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 30,
+          }}>
+          <View style={{flex: 1}}>
+            <BigText style={{fontSize: 40}}>{stationName}</BigText>
+            <RegularText dim>{name}</RegularText>
+          </View>
+
+          <SmallText>Listeners: {numViewers - 1}</SmallText>
+        </View>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            marginBottom: 40,
+          }}>
+          <TouchableOpacity
+            onPress={toggleMic}
+            style={{
+              backgroundColor: Colors.primary,
+              width: 60,
+              height: 60,
+              borderRadius: 360,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Icon
+              size={20}
+              type={Icons.FontAwesome5}
+              name={muted ? 'microphone-slash' : 'microphone'}
+              color={'white'}
+            />
+          </TouchableOpacity>
+        </View>
+        <Soundboard />
+      </View>
+    </ScrollView>
+  );
 };
 
 const BroadcastScreen = ({route}) => {
@@ -139,49 +225,7 @@ const BroadcastScreen = ({route}) => {
             <View />
           </View>
           {sel === 0 ? (
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <FastImage
-                source={{uri: picture}}
-                style={{
-                  height: SCREEN_WIDTH - 40,
-                  width: SCREEN_WIDTH - 40,
-                  alignSelf: 'center',
-                  borderRadius: 15,
-                  backgroundColor: Colors.lightpurple,
-                  marginTop: 10,
-                }}
-              />
-              <View style={{padding: 20}}>
-                <BigText style={{fontSize: 40}}>{stationName}</BigText>
-                <RegularText style={{marginBottom: 30}} dim>
-                  {name}
-                </RegularText>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    marginBottom: 40,
-                  }}>
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: Colors.primary,
-                      width: 60,
-                      height: 60,
-                      borderRadius: 360,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}>
-                    <Icon
-                      size={20}
-                      type={Icons.FontAwesome5}
-                      name={'microphone'}
-                      color={'white'}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <Soundboard />
-              </View>
-            </ScrollView>
+            <Broadcast {...{name, picture, stationName}} />
           ) : sel === 1 ? (
             <Tracks stationName={stationName} item={route.params} />
           ) : null}
