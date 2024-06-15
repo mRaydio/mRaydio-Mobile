@@ -4,7 +4,6 @@ import {
   FlatList,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -23,50 +22,19 @@ import {
 import {LIVEKIT_URL} from '@env';
 import {getStationToken} from 'api/stations';
 import {useApi} from 'hooks/useApi';
-import Input from 'components/Input';
 import FastImage from 'react-native-fast-image';
 import {SCREEN_WIDTH} from 'constants/Variables';
 import {BigText, RegularText, SmallText} from 'components/Text';
 import Colors from 'constants/Colors';
-import PageHeader from 'components/PageHeader';
 import Icon, {Icons} from 'components/Icons';
-import {pick, types} from 'react-native-document-picker';
-import {requestUploadUrl} from 'api/upload';
 import Tracks from '../components/Tracks';
 import {BackButton} from 'components/IconButton';
 import Selector from 'components/Selector';
 import {ConnectionState} from '../components/ConnectionState';
-
-const Soundboard = () => {
-  return (
-    <View style={{marginBottom: 30}}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-        <RegularText>Soundboard</RegularText>
-        <TouchableOpacity>
-          <Icon
-            size={20}
-            type={Icons.AntDesign}
-            name={'plus'}
-            color={Colors.dim}
-          />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
-
-const LiveChat = () => {
-  return (
-    <View style={{}}>
-      <Input />
-    </View>
-  );
-};
+import TrackPlayer from 'react-native-track-player';
+import SoundBoard from '../components/SoundBoard';
+import LiveChat from '../components/LiveChat';
+import {eventhandlerOwner} from '../utilis/eventhandler';
 
 const RoomView = ({token}) => {
   const room = useRoomContext();
@@ -74,11 +42,14 @@ const RoomView = ({token}) => {
   useEffect(() => {
     const connect = async () => {
       await room.connect(LIVEKIT_URL, token, {});
-      room.console.log('roo', room.metadata);
+      room.on('dataReceived', payload => {
+        eventhandlerOwner(payload);
+      });
     };
     connect();
     return () => {
       room.disconnect();
+      TrackPlayer.reset();
     };
   }, []);
   return <View />;
@@ -167,7 +138,7 @@ const Broadcast = ({name, picture, stationName}) => {
             />
           </TouchableOpacity>
         </View>
-        <Soundboard />
+        <SoundBoard {...{stationName}} />
       </View>
     </ScrollView>
   );
@@ -202,6 +173,7 @@ const BroadcastScreen = ({route}) => {
   const Screens = [
     <Broadcast {...{name, picture, stationName}} />,
     <Tracks stationName={stationName} item={route.params} />,
+    <LiveChat item={route.params} host={true} />,
   ];
 
   const RenderItem = ({item}) => {
@@ -251,6 +223,8 @@ const BroadcastScreen = ({route}) => {
           <FlatList
             ref={flatRef}
             horizontal
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
             snapToInterval={SCREEN_WIDTH}
             bounces={false}
             decelerationRate={'fast'}
@@ -259,14 +233,10 @@ const BroadcastScreen = ({route}) => {
               [{nativeEvent: {contentOffset: {x: scrollX}}}],
               {useNativeDriver: false},
             )}
-            data={[0, 1]}
+            data={[0, 1, 2]}
             renderItem={RenderItem}
           />
-          {/* {sel === 0 ? (
-            <Broadcast {...{name, picture, stationName}} />
-          ) : sel === 1 ? (
-            <Tracks stationName={stationName} item={route.params} />
-          ) : null} */}
+
           <RoomView token={token} />
           <ConnectionState />
         </LiveKitRoom>

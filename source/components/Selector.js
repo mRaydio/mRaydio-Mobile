@@ -24,7 +24,6 @@ const Selector = ({data, flatRef, scrollX}) => {
           width: ITEM_WIDTH,
           position: 'absolute',
           borderRadius: 360,
-          // left: index * ITEM_WIDTH,
           transform: [
             {
               translateX: scrollX.interpolate({
@@ -39,11 +38,14 @@ const Selector = ({data, flatRef, scrollX}) => {
         <TouchableOpacity
           onPress={() => {
             flatRef.current.scrollToIndex({index: i, animated: true});
-            // layoutAnimate();
-            // setIndex(i);
           }}
           key={i.toString()}
-          style={{width: ITEM_WIDTH, alignItems: 'center'}}>
+          style={{
+            width: ITEM_WIDTH,
+            alignItems: 'center',
+            height: 40,
+            justifyContent: 'center',
+          }}>
           <SmallText>{d?.title}</SmallText>
         </TouchableOpacity>
       ))}

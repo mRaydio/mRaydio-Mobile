@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -31,6 +32,7 @@ import {
   roomMetadataUpdater,
 } from '../utilis/helper';
 import {ws} from 'api/base';
+import {getItem} from 'services/storage';
 
 const TrackVolume = ({room, stationName}) => {
   const {send} = eventSender(room);
@@ -51,6 +53,7 @@ const TrackVolume = ({room, stationName}) => {
             }}>
             <Slider
               value={0.03}
+              onResponderGrant={() => true}
               style={{
                 width: Platform.OS === 'ios' ? '200%' : (SCREEN_WIDTH - 60) / 2,
                 height: 30,
@@ -83,6 +86,7 @@ const TrackVolume = ({room, stationName}) => {
             }}>
             <Slider
               value={1}
+              onResponderGrant={() => true}
               style={{
                 width: Platform.OS === 'ios' ? '200%' : (SCREEN_WIDTH - 60) / 2,
                 height: 30,
@@ -268,6 +272,7 @@ const TrackItem = ({item, stationName, index, room}) => {
                 alignSelf: 'center',
               }}
               minimumValue={0}
+              onResponderGrant={() => true}
               tapToSeek
               maximumValue={progress.duration}
               minimumTrackTintColor={Colors.primary}
@@ -301,12 +306,12 @@ const TrackItem = ({item, stationName, index, room}) => {
 const Tracks = ({stationName, item}) => {
   useEffect(() => {
     ws.onmessage = e => {
-      // a message was received
       console.log(e.data);
+      refetch();
     };
   }, []);
   const room = useRoomContext();
-  const {data} = useApi({
+  const {data, refetch} = useApi({
     queryFn: getTracks,
     queryKey: ['getTracks', stationName],
   });
@@ -325,24 +330,35 @@ const Tracks = ({stationName, item}) => {
   const [uploading, setUploading] = useState(false);
   const open = async () => {
     try {
+      setUploading(true);
       const response = await pick({
         type: [types.audio],
         copyTo: 'cachesDirectory',
       });
       console.log(response);
       const {fileCopyUri, name, type, size} = response[0];
+
+      if (size > 20971520) {
+        showNotification({
+          msg: 'The file cannot be larger than 20 MB. Please upload a smaller file.',
+          error: true,
+        });
+        return;
+      }
+      setTracks(prev => [{name, uploading: true}, ...prev]);
       const {data: track} = await createTrack({name, size, type, stationName});
       console.log('track', track);
 
       const {data} = await requestUploadUrl({
         type,
         purpose: 'station_track',
-        fileName: track?.track?._id,
+        fileName: `${track?.track?._id}_${getItem('userdetails', true)._id}`,
       });
-      const {publicUrl, signedUrl} = data ?? {};
+      const {signedUrl} = data ?? {};
       console.log('data', data);
       await upload({uploadUrl: signedUrl, path: fileCopyUri, type});
       console.log('upload complete');
+      setUploading(false);
     } catch (err) {
       console.log(err);
       catchError(err);
@@ -350,7 +366,10 @@ const Tracks = ({stationName, item}) => {
   };
   const [tracks, setTracks] = useState([]);
   return (
-    <View style={{marginBottom: 30, padding: 20}}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      style={{paddingBottom: 30, padding: 20}}
+      contentContainerStyle={{paddingBottom: 40}}>
       <StationMiniView {...{...item}} />
       <View
         style={{
@@ -378,7 +397,7 @@ const Tracks = ({stationName, item}) => {
           room={room}
         />
       ))}
-    </View>
+    </ScrollView>
   );
 };
 

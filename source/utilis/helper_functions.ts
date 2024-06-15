@@ -1,7 +1,13 @@
-import {DeviceEventEmitter, LayoutAnimation} from 'react-native';
+import {
+  DeviceEventEmitter,
+  LayoutAnimation,
+  PermissionsAndroid,
+  Platform,
+} from 'react-native';
 import {SCREEN_HEIGHT, SCREEN_WIDTH} from '../constants/Variables';
 import countryData from '../constants/output.json';
 import citiesData from '../constants/lgas.json';
+import RNFS from 'react-native-fs';
 
 export const layoutAnimate = () => {
   LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -139,4 +145,29 @@ export const showNotification = ({
     error,
     msg,
   });
+};
+
+export const requestExternalStoragePermission = async () => {
+  if (Platform.OS === 'android') {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        // RNFS.mkdir(
+        //   RNFS.ExternalStorageDirectoryPath + '/Xarp Spaces/Received Files',
+        // );
+      }
+    } catch (error) {
+      console.error('Error requesting external storage permission:', error);
+    }
+  } else {
+    try {
+      // RNFS.mkdir(RNFS.DocumentDirectoryPath + '/Received Files', {
+      //   NSURLIsExcludedFromBackupKey: false,
+      // });
+    } catch (error) {
+      console.error('Error creating dir IOS:', error);
+    }
+  }
 };

@@ -15,6 +15,7 @@ const img3 = require('../assets/images/img3.png');
 let title;
 let body;
 const data = [img1, img2, img3];
+let intervalId;
 
 const PaginationDot = ({scrollX}) => {
   return (
@@ -41,6 +42,8 @@ const PaginationDot = ({scrollX}) => {
 const OnboardingScreen = ({navigation}) => {
   const insets = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
+  const [stopScroll, setStopScroll] = useState(false);
+
   const scrollX = React.useRef(new Animated.Value(0)).current;
   const viewabilityConfig = React.useRef({
     viewAreaCoveragePercentThreshold: 70,
@@ -77,9 +80,15 @@ const OnboardingScreen = ({navigation}) => {
   };
 
   useEffect(() => {
-    const intervalId = setInterval(scrollCarousel, 6000);
-    return () => clearInterval(intervalId);
-  }, [index]);
+    if (stopScroll) {
+      clearInterval(intervalId);
+    } else {
+      intervalId = setInterval(scrollCarousel, 5000);
+    }
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [index, intervalId, setStopScroll]);
   return (
     <View
       style={{
@@ -111,6 +120,10 @@ const OnboardingScreen = ({navigation}) => {
           decelerationRate={'fast'}
           horizontal
           data={data}
+          onScrollEndDrag={() => {
+            setStopScroll(true);
+            clearInterval(intervalId);
+          }}
           onScroll={Animated.event(
             [{nativeEvent: {contentOffset: {x: scrollX}}}],
             {useNativeDriver: false},

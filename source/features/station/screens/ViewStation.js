@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import Mainbackground from 'components/Mainbackground';
-import {getStationToken, getStations, getTracks} from 'api/stations';
+import {getSounds, getStationToken, getStations, getTracks} from 'api/stations';
 import {useApi} from 'hooks/useApi';
 import {
   AndroidAudioTypePresets,
@@ -30,6 +30,9 @@ import {ConnectionState} from '../components/ConnectionState';
 import LottieView from 'lottie-react-native';
 import {useCurrentStation} from 'services/store';
 import {playTrackFromMeta} from '../utilis/helper';
+import {SharedElement} from 'react-navigation-shared-element';
+import {handleSounds, loadSounds} from '../utilis/soundsFileHandler';
+import LiveChat from '../components/LiveChat';
 
 const RoomView = ({token}) => {
   const room = useRoomContext();
@@ -140,18 +143,14 @@ const StationControls = ({
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Icon
-          type={Icons.Entypo}
-          name={connected ? 'controller-stop' : 'controller-play'}
-          color={'white'}
-          size={24}
-        />
-        {/* <LottieView
-          source={require('../assets/lottie/wave.json')}
-          autoPlay
-          loop
-          style={{width: 100, height: 70}}
-        /> */}
+        <SharedElement id={`station_stop`}>
+          <Icon
+            type={Icons.Entypo}
+            name={connected ? 'controller-stop' : 'controller-play'}
+            color={'white'}
+            size={24}
+          />
+        </SharedElement>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -180,23 +179,33 @@ const Station = ({
   name,
   setCurrentStation,
   setStationName,
+  setIndex,
+  index,
+  stationsList,
+  token,
 }) => {
   return (
     <>
-      <FastImage
-        source={{uri: picture}}
-        sharedTransitionTag="tag"
-        style={{
-          height: SCREEN_WIDTH - 40,
-          width: SCREEN_WIDTH - 40,
-          alignSelf: 'center',
-          borderRadius: 15,
-          backgroundColor: Colors.lightpurple,
-        }}
-      />
+      <SharedElement id={`station_image`}>
+        <FastImage
+          source={{uri: picture}}
+          sharedTransitionTag="tag"
+          style={{
+            height: SCREEN_WIDTH - 40,
+            width: SCREEN_WIDTH - 40,
+            alignSelf: 'center',
+            borderRadius: 15,
+            backgroundColor: Colors.lightpurple,
+          }}
+        />
+      </SharedElement>
       <View style={{padding: 20}}>
-        <BigText style={{fontSize: 40}}>{stationName}</BigText>
-        <RegularText dim>{name}</RegularText>
+        <SharedElement id={`station_stationName`}>
+          <BigText style={{fontSize: 40}}>{stationName}</BigText>
+        </SharedElement>
+        <SharedElement id={`station_name`}>
+          <RegularText dim>{name}</RegularText>
+        </SharedElement>
       </View>
       <View style={{flex: 0.5}} />
       <StationControls
@@ -214,8 +223,6 @@ const Station = ({
   );
 };
 const ViewStation = ({route}) => {
-  const [sel, setSel] = useState(0);
-
   const currentStation = useCurrentStation(state => state.currentStation);
   const setCurrentStation = useCurrentStation(state => state.setCurrentStation);
   const updateToken = useCurrentStation(state => state.updateToken);
@@ -228,6 +235,21 @@ const ViewStation = ({route}) => {
     queryKey: [`getStationToken`, stationName],
     queryFn: getStationToken,
   });
+
+  const {data: soundList} = useApi({
+    queryFn: getSounds,
+    queryKey: ['getSounds', stationName],
+  });
+
+  useEffect(() => {
+    console.log('sounds', soundList);
+    const init = async () => {
+      await handleSounds({stationName, sounds: soundList.sounds});
+      loadSounds({sounds: soundList.sounds});
+    };
+
+    init();
+  }, [soundList]);
 
   const {data: stationsList} = useApi({
     queryFn: getStations,
@@ -269,7 +291,7 @@ const ViewStation = ({route}) => {
       console.log('updating token', token);
       updateToken(token);
     }
-  }, [token]);
+  }, [data]);
 
   useEffect(() => {
     let connect = async () => {
@@ -288,8 +310,19 @@ const ViewStation = ({route}) => {
 
   const Screens = [
     <Station
-      {...{name, picture, stationName, setCurrentStation, setStationName}}
+      {...{
+        name,
+        picture,
+        stationName,
+        setCurrentStation,
+        setStationName,
+        index,
+        setIndex,
+        stationsList,
+        token,
+      }}
     />,
+    <LiveChat item={{name, stationName, picture}} />,
   ];
 
   const RenderItem = ({item}) => {
@@ -306,7 +339,7 @@ const ViewStation = ({route}) => {
   };
 
   return (
-    <Mainbackground style={{flex: 1, backgroundColor: Colors.bg}}>
+    <Mainbackground avoid style={{flex: 1, backgroundColor: Colors.bg}}>
       <View
         style={{
           flexDirection: 'row',
@@ -323,6 +356,7 @@ const ViewStation = ({route}) => {
         <View />
       </View>
       <FlatList
+        keyboardShouldPersistTaps="handled"
         ref={flatRef}
         horizontal
         snapToInterval={SCREEN_WIDTH}

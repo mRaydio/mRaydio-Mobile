@@ -30,7 +30,7 @@ const CreateStation = ({navigation}) => {
   const validate = () => {
     console.log(convertToDecimal(stationName));
     if (url) {
-      setLoad(tru);
+      setLoad(true);
       createStation({
         description,
         name,

@@ -2,7 +2,9 @@ import axios, {AxiosInstance} from 'axios';
 import {getItem} from 'services/storage';
 
 export const ws = new WebSocket(
-  `ws://localhost:8080?token=${getItem('token')}`,
+  `ws://ec2-3-94-145-169.compute-1.amazonaws.com:8080?token=${getItem(
+    'token',
+  )}`,
 );
 
 export const BASEURL =

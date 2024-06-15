@@ -9,7 +9,9 @@ export const eventSender = room => {
       event,
       data,
     });
+    console.log('senddata', strData);
     const senddata = encoder.encode(strData);
+
     room.localParticipant.publishData(senddata, {reliable: true});
   };
 

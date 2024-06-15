@@ -89,3 +89,26 @@ export const stopTrack = async ({ingressId}) => {
 
   return res;
 };
+
+export const createSound = async ({name, size, type, stationName}) => {
+  const axiosinstance = axiosBase();
+
+  const res = axiosinstance.post('/station/create-sound', {
+    name,
+    size,
+    type,
+    stationName,
+  });
+
+  return res;
+};
+
+export const getSounds = async ({queryKey}) => {
+  const axiosinstance = axiosBase();
+  const stationName = queryKey[1];
+  const res = axiosinstance.get(
+    `/station/get-sounds?stationName=${stationName}`,
+  );
+
+  return (await res)?.data;
+};

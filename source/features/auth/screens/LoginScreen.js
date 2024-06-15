@@ -26,7 +26,7 @@ const LoginScreen = ({navigation}) => {
           setItem('userdetails', user, true);
           navigation.reset({
             index: 0,
-            routes: [{name: 'BottomNav'}],
+            routes: [{name: 'AniStackNav'}],
           });
         }
       })

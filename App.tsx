@@ -19,6 +19,7 @@ import TrackPlayer from 'react-native-track-player';
 import {LiveKitRoom} from '@livekit/react-native';
 import {LIVEKIT_URL} from '@env';
 import {useCurrentStation} from 'services/store';
+import {requestExternalStoragePermission} from 'utilis/helper_functions';
 
 if (Platform.OS === 'android') {
   StatusBar.setBackgroundColor('transparent');
@@ -29,7 +30,13 @@ if (Platform.OS === 'android') {
 }
 
 LogBox.ignoreAllLogs();
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      cacheTime: Infinity,
+    },
+  },
+});
 
 const App = () => {
   const transY = useRef(new Animated.Value(0)).current;
@@ -49,6 +56,7 @@ const App = () => {
 
   const token = useCurrentStation(state => state.token);
   useEffect(() => {
+    // requestExternalStoragePermission();
     const init = async () => {
       await TrackPlayer.setupPlayer();
     };
