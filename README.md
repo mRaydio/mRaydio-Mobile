@@ -1,79 +1,110 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+<div style="display: flex; align-items: center; gap: 20px;">
+    <img src="source/assets/svg/logo/logo.svg" alt="mRaydio Logo" width="50" height="44" />
+    <h1>mRaydio</h1>
+</div>
 
-# Getting Started
+Create and broadcast your own radio station directly from your mobile device.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+## Overview
 
-## Step 1: Start the Metro Server
+mRaydio is a revolutionary mobile application that transforms your smartphone into a personal radio station. Built with React Native, it enables users to create, manage, and broadcast their own radio content to listeners worldwide. Whether you're a music enthusiast, podcast creator, or aspiring radio host, mRaydio provides the tools to reach your audience.
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## Features
 
-To start Metro, run the following command from the _root_ of your React Native project:
+### Broadcasting
+
+- Live audio broadcasting from your device's microphone
+- Upload and schedule pre-recorded content
+- Music playlist management and scheduling
+- Real-time listener statistics
+- Automated programming schedule
+
+### Listening
+
+- Discover user-created radio stations
+- Live stream access to all broadcasts
+- Program schedule viewing
+- Favorite station bookmarking
+- Background audio playback
+
+### Content Management
+
+- Audio file library management
+- Program scheduling system
+- Playlist creation and management
+- Broadcast history tracking
+- Content categorization
+
+## Installation
+
+1. Clone the repository:
 
 ```bash
-# using npm
-npm start
+git clone <repository-url>
+cd mraydio-app
+```
 
-# OR using Yarn
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. iOS specific setup:
+
+```bash
+cd ios
+pod install
+cd ..
+```
+
+## Running the Application
+
+### Starting the Metro Bundler
+
+```bash
+npm start
+# or
 yarn start
 ```
 
-## Step 2: Start your Application
+### Running on Device
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
+### iOS
 
 ```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### For iOS
-
-```bash
-# using npm
 npm run ios
-
-# OR using Yarn
+# or
 yarn ios
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+### Android
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+```bash
+npm run android
+# or
+yarn android
+```
 
-## Step 3: Modifying your App
+## Project Structure
 
-Now that you have successfully run the app, let's modify it.
+```plaintext
+mraydio-app/
+├── android/          # Android native code
+├── ios/             # iOS native code
+└── source/          # React Native source code
+    ├── assets/      # Static assets
+```
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+## Features & Permissions
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+The application requires the following device permissions:
 
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- Microphone access (for live broadcasting)
+- Audio playback
+- Background audio
+- Media library access (for uploaded content)
+- Internet connectivity
+- Storage access (for cached content)
