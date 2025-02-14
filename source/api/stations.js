@@ -4,6 +4,8 @@ export const getStationToken = async ({queryKey}) => {
   const stationName = queryKey[1];
   const axiosinstance = axiosBase();
 
+  console.log(`/station/get-token?stationName=${stationName}`);
+
   const res = axiosinstance.post('/station/get-token', {
     stationName,
   });
@@ -61,7 +63,6 @@ export const createTrack = async ({name, size, type, stationName}) => {
 export const getTracks = async ({queryKey}) => {
   const axiosinstance = axiosBase();
   const stationName = queryKey[1];
-  console.log(`/station/get-tracks?stationName=${stationName}`);
   const res = axiosinstance.get(
     `/station/get-tracks?stationName=${stationName}`,
   );
@@ -111,4 +112,26 @@ export const getSounds = async ({queryKey}) => {
   );
 
   return (await res)?.data;
+};
+
+export const deleteTrack = async ({id}) => {
+  const axiosinstance = axiosBase();
+
+  const res = axiosinstance.delete(`/station/delete-track?id=${id}`);
+
+  return res;
+};
+
+export const scheduleTrack = async ({_id, time, stationName, index, url}) => {
+  const axiosinstance = axiosBase();
+
+  const res = axiosinstance.post('/station/schedule-track', {
+    _id,
+    time,
+    stationName,
+    index,
+    url,
+  });
+
+  return res;
 };

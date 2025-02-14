@@ -196,9 +196,6 @@ const BroadcastScreen = ({route}) => {
           serverUrl={LIVEKIT_URL}
           token={token}
           connect={!!token}
-          options={{
-            adaptiveStream: {pixelDensity: 'screen'},
-          }}
           audio={true}
           video={false}>
           <View

@@ -1,11 +1,4 @@
-import {
-  Animated,
-  LogBox,
-  Platform,
-  StatusBar,
-  UIManager,
-  View,
-} from 'react-native';
+import {Animated, LogBox, Platform, StatusBar, UIManager} from 'react-native';
 import React, {useEffect, useRef} from 'react';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {QueryClient} from '@tanstack/react-query';
@@ -15,11 +8,11 @@ import {NavigationContainer} from '@react-navigation/native';
 import StackNav from './source/navigation/StackNav';
 import {PersistQueryClientProvider} from '@tanstack/react-query-persist-client';
 import {clientPersister} from 'services/storage';
-import TrackPlayer from 'react-native-track-player';
+import TrackPlayer, {RepeatMode} from 'react-native-track-player';
 import {LiveKitRoom} from '@livekit/react-native';
 import {LIVEKIT_URL} from '@env';
 import {useCurrentStation} from 'services/store';
-import {requestExternalStoragePermission} from 'utilis/helper_functions';
+import {persistQueryClient} from '@tanstack/react-query-persist-client';
 
 if (Platform.OS === 'android') {
   StatusBar.setBackgroundColor('transparent');
@@ -30,10 +23,12 @@ if (Platform.OS === 'android') {
 }
 
 LogBox.ignoreAllLogs();
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       cacheTime: Infinity,
+      staleTime: Infinity,
     },
   },
 });
@@ -55,8 +50,8 @@ const App = () => {
   };
 
   const token = useCurrentStation(state => state.token);
+  console.log('App token', token);
   useEffect(() => {
-    // requestExternalStoragePermission();
     const init = async () => {
       await TrackPlayer.setupPlayer();
     };

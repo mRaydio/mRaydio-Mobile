@@ -19,8 +19,8 @@ const StationMiniView = ({name, stationName, picture}) => {
         }}
       />
       <View>
-        <BigText style={{fontSize: 40}}>{stationName}</BigText>
-        <RegularText style={{}} dim>
+        <BigText style={{fontSize: 30}}>{stationName}</BigText>
+        <RegularText style={{fontSize: 17}} dim>
           {name}
         </RegularText>
       </View>

@@ -6,20 +6,21 @@ import ViewStation from 'features/station/screens/ViewStation';
 const Stack = createSharedElementStackNavigator();
 
 const AniStackNav = () => {
-  const sharedElements = () => {
+  const sharedElements = route => {
+    const {stationName} = route.params ?? {};
     return [
       {
-        id: `station_image`,
+        id: `station_image_${stationName}`,
         animation: 'fade',
         resize: 'clip',
       },
       {
-        id: `station_stationName`,
+        id: `station_stationName_${stationName}`,
         animation: 'fade',
         resize: 'clip',
       },
       {
-        id: `station_name`,
+        id: `station_name_${stationName}`,
         animation: 'fade',
         resize: 'clip',
       },

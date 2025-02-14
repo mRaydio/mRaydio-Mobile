@@ -1,6 +1,8 @@
 import {
   ActivityIndicator,
+  Alert,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,8 +20,12 @@ import {
 } from 'components/Text';
 import Icon, {Icons} from 'components/Icons';
 import Colors from 'constants/Colors';
-import {createTrack, getTracks, startTrack} from 'api/stations';
-import {catchError} from 'utilis/helper_functions';
+import {createTrack, getTracks, scheduleTrack, startTrack} from 'api/stations';
+import {
+  catchError,
+  formatDateString,
+  showNotification,
+} from 'utilis/helper_functions';
 import {useApi} from 'hooks/useApi';
 import StationMiniView from './StationMiniView';
 import Slider from '@react-native-community/slider';
@@ -33,7 +39,161 @@ import {
 } from '../utilis/helper';
 import {ws} from 'api/base';
 import {getItem} from 'services/storage';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from '@react-native-community/datetimepicker';
+import {Dialog} from 'components/Dialog';
+import Button from 'components/Button';
 
+const Menu = ({menuInfo, tracks, setMenuInfo}) => {
+  const {x, y, index} = menuInfo ?? {};
+
+  const [date, setDate] = useState(new Date());
+  const [mode, setMode] = useState('date');
+  const [open, setOpen] = useState(false);
+  const [load, setLoad] = useState(false);
+
+  const onChange = (event, selectedDate) => {
+    console.log('ev', selectedDate, mode);
+    const currentDate = selectedDate;
+    setDate(currentDate);
+    if (mode === 'date') {
+      setMode(() => 'time');
+      showTimepicker();
+    }
+  };
+
+  const showMode = () => {
+    DateTimePickerAndroid.open({
+      value: date,
+      onChange,
+      mode,
+      is24Hour: false,
+    });
+  };
+
+  const showDatepicker = () => {
+    DateTimePickerAndroid.open({
+      value: date,
+      onChange,
+      mode: 'date',
+      is24Hour: false,
+    });
+  };
+
+  const showTimepicker = () => {
+    DateTimePickerAndroid.open({
+      value: date,
+      onChange,
+      mode: 'time',
+      is24Hour: false,
+    });
+  };
+
+  const schedule = () => {
+    const track = tracks[index];
+
+    console.log(track);
+    setLoad(true);
+    scheduleTrack({...track, index, time: formatDateString(date)})
+      .then(d => {
+        console.log(d.data);
+        setOpen(false);
+        setMenuInfo({open: false});
+        showNotification({msg: 'Track would play at scheduled time'});
+      })
+      .catch(err => {
+        const {error} = err?.response?.data ?? {};
+        if (error?.includes('already exists')) {
+          Alert.alert('This track is already scheduled to play');
+        } else {
+          Alert.alert(error);
+        }
+      })
+      .finally(() => {
+        setLoad(false);
+      });
+  };
+
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        backgroundColor: '#35334e',
+        right: 10,
+        zIndex: 1,
+        top: y - 110,
+        elevation: 5,
+        borderRadius: 10,
+      }}>
+      <SmallText
+        onPress={() => {
+          console.log('yess');
+          if (Platform.OS === 'android') {
+            showDatepicker();
+          } else {
+            setOpen(true);
+          }
+        }}
+        style={{marginRight: 40, marginTop: 20, marginLeft: 20}}>
+        Schedule play
+      </SmallText>
+      <View
+        style={{
+          width: '100%',
+          height: 1,
+          marginVertical: 15,
+          backgroundColor: Colors.lightpurple,
+        }}
+      />
+      <SmallText
+        style={{
+          marginRight: 40,
+          marginBottom: 20,
+          marginLeft: 20,
+          color: Colors.red,
+        }}>
+        Delete
+      </SmallText>
+      <Dialog
+        open={open}
+        closeModal={() => {
+          setOpen(false);
+        }}>
+        <View
+          style={{justifyContent: 'center', alignItems: 'center', padding: 40}}>
+          <RegularText style={{marginBottom: 30}}>
+            Select Time To Play Track
+          </RegularText>
+          <DateTimePicker
+            value={date}
+            mode={'datetime'}
+            is24Hour={false}
+            onChange={onChange}
+          />
+          <View style={{flexDirection: 'row', marginTop: 30}}>
+            <Button
+              small
+              onPress={() => {
+                setOpen(false);
+              }}
+              width={30}
+              title="Cancel"
+              style={{backgroundColor: Colors.red, marginRight: 20}}
+            />
+            <Button
+              width={30}
+              load={load}
+              small
+              title="Schedule"
+              onPress={schedule}
+            />
+          </View>
+        </View>
+      </Dialog>
+    </View>
+  );
+};
 const TrackVolume = ({room, stationName}) => {
   const {send} = eventSender(room);
 
@@ -124,8 +284,26 @@ const TrackVolume = ({room, stationName}) => {
   );
 };
 
-const TrackAction = ({stationName, index, isPlaying, setIsplaying, room}) => {
+const TrackAction = ({
+  stationName,
+  index,
+  isPlaying,
+  setIsplaying,
+  room,
+  setMenuInfo,
+}) => {
   const {send} = eventSender(room);
+
+  const {position, duration} = useProgress();
+  if (position && duration && position >= duration) {
+    TrackPlayer.stop();
+    setIsplaying(false);
+    clearRoommeta(stationName);
+    send({
+      event: 'STOP_TRACK',
+    });
+  }
+
   const play = async () => {
     try {
       roomMetadataUpdater(
@@ -178,6 +356,12 @@ const TrackAction = ({stationName, index, isPlaying, setIsplaying, room}) => {
     setIsplaying(false);
   };
 
+  const openMenu = event => {
+    const {pageX, pageY} = event.nativeEvent;
+    console.log(event.nativeEvent);
+    setMenuInfo({open: true, index, x: pageX, y: pageY});
+  };
+
   return (
     <View style={{flexDirection: 'row', alignItems: 'center'}}>
       <TouchableOpacity
@@ -209,22 +393,25 @@ const TrackAction = ({stationName, index, isPlaying, setIsplaying, room}) => {
           />
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity>
-          <Icon
-            size={22}
-            type={Icons.Feather}
-            name={'more-vertical'}
-            color={'white'}
-          />
-        </TouchableOpacity>
+        <>
+          <TouchableOpacity onPress={openMenu}>
+            <Icon
+              size={22}
+              type={Icons.Feather}
+              name={'more-vertical'}
+              color={'white'}
+            />
+          </TouchableOpacity>
+        </>
       )}
     </View>
   );
 };
 
-const TrackItem = ({item, stationName, index, room}) => {
+const TrackItem = ({item, stationName, index, room, setMenuInfo}) => {
   const {name, uploading, url} = item ?? {};
   const progress = useProgress();
+
   const [isPlaying, setIsplaying] = useState(false);
   const {send} = eventSender(room);
   return (
@@ -249,7 +436,15 @@ const TrackItem = ({item, stationName, index, room}) => {
           <ActivityIndicator color={Colors.dim} size={'small'} />
         ) : (
           <TrackAction
-            {...{stationName, url, index, setIsplaying, isPlaying, room}}
+            {...{
+              stationName,
+              url,
+              index,
+              setIsplaying,
+              isPlaying,
+              room,
+              setMenuInfo,
+            }}
           />
         )}
       </View>
@@ -328,6 +523,7 @@ const Tracks = ({stationName, item}) => {
   }, [data]);
 
   const [uploading, setUploading] = useState(false);
+  const [menuInfo, setMenuInfo] = useState({open: false});
   const open = async () => {
     try {
       setUploading(true);
@@ -366,38 +562,48 @@ const Tracks = ({stationName, item}) => {
   };
   const [tracks, setTracks] = useState([]);
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      style={{paddingBottom: 30, padding: 20}}
-      contentContainerStyle={{paddingBottom: 40}}>
-      <StationMiniView {...{...item}} />
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 15,
-        }}>
-        <MediumText>Tracks</MediumText>
-        <TouchableOpacity disabled={uploading} onPress={open}>
-          <Icon
-            size={20}
-            type={Icons.AntDesign}
-            name={'plus'}
-            color={Colors.dim}
+    <Pressable
+      style={{flex: 1}}
+      onPress={() => {
+        setMenuInfo({open: false});
+      }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{paddingBottom: 30, padding: 20}}
+        contentContainerStyle={{paddingBottom: 40}}>
+        <StationMiniView {...{...item}} />
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 15,
+          }}>
+          <MediumText>Tracks</MediumText>
+          <TouchableOpacity disabled={uploading} onPress={open}>
+            <Icon
+              size={20}
+              type={Icons.AntDesign}
+              name={'plus'}
+              color={Colors.dim}
+            />
+          </TouchableOpacity>
+        </View>
+        {tracks.map((data, i) => (
+          <TrackItem
+            key={i.toString()}
+            item={data}
+            index={i}
+            stationName={stationName}
+            room={room}
+            setMenuInfo={setMenuInfo}
           />
-        </TouchableOpacity>
-      </View>
-      {tracks.map((data, i) => (
-        <TrackItem
-          key={i.toString()}
-          item={data}
-          index={i}
-          stationName={stationName}
-          room={room}
-        />
-      ))}
-    </ScrollView>
+        ))}
+        {menuInfo.open && (
+          <Menu menuInfo={menuInfo} tracks={tracks} setMenuInfo={setMenuInfo} />
+        )}
+      </ScrollView>
+    </Pressable>
   );
 };
 

@@ -16,6 +16,9 @@ export const ConnectionState = () => {
   const room = useRoomContext();
 
   useEffect(() => {
+    setStatus('Connecting');
+    setStatusColor('#f1c40f');
+
     room.on('connected', (payload, participant, kind) => {
       setStatus('Connected');
       setStatusColor('green');

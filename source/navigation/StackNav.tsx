@@ -18,6 +18,7 @@ interface DeepLinkResult {
 }
 
 import AniStackNav from './AniStack';
+import CreateAccountScreen from 'features/auth/screens/CreateAccountScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -53,6 +54,11 @@ const StackNav = () => {
       }}>
       <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen
+        name="CreateAccountScreen"
+        component={CreateAccountScreen}
+      />
+
       <Stack.Screen name="MyStations" component={MyStations} />
       <Stack.Screen name="CreateStation" component={CreateStation} />
       <Stack.Screen name="BroadcastScreen" component={BroadcastScreen} />

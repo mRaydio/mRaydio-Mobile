@@ -314,8 +314,8 @@ const SoundBoard = ({stationName}) => {
         </TouchableOpacity>
       </View>
       <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 15}}>
-        {soundList?.map(item => (
-          <SoundItem item={item} room={room} />
+        {soundList?.map((item, i) => (
+          <SoundItem key={i.toString()} item={item} room={room} />
         ))}
       </View>
     </View>

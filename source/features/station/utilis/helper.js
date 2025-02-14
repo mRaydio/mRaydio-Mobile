@@ -55,6 +55,7 @@ export const clearRoommeta = roomName => {
 };
 
 export const playTrackFromMeta = async metadata => {
+  console.log('meta function called', metadata);
   const meta = JSON.parse(metadata ?? '{}');
   console.log('ROOM META', meta);
   const {startTime, progress, index, volume} = meta ?? {};

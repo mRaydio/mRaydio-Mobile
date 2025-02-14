@@ -1,4 +1,5 @@
 import {
+  Alert,
   DeviceEventEmitter,
   LayoutAnimation,
   PermissionsAndroid,
@@ -12,10 +13,14 @@ import RNFS from 'react-native-fs';
 export const layoutAnimate = () => {
   LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 };
-export const catchError = err => {
+export const catchError = (err, isModal) => {
   console.log('=== ERROR ====\n', err?.response.data);
   const {message, error} = err?.response?.data ?? {};
-  showNotification({msg: message || error, error: true});
+  if (isModal) {
+    Alert.alert(message || error);
+  } else {
+    showNotification({msg: message || error, error: true});
+  }
 };
 export const getPercentHeight = (percent: number) => {
   return (percent / 100) * SCREEN_HEIGHT;
@@ -146,6 +151,28 @@ export const showNotification = ({
     msg,
   });
 };
+
+export function formatDateString(dateString) {
+  // Parse the input date string
+  const date = new Date(dateString);
+
+  // Helper function to pad single digits with a leading zero
+  function pad(number) {
+    return number < 10 ? '0' + number : number;
+  }
+
+  // Extract date components
+  const year = date.getUTCFullYear();
+  const month = pad(date.getUTCMonth() + 1); // Months are zero-indexed
+  const day = pad(date.getUTCDate());
+  const hours = pad(date.getUTCHours());
+  const minutes = pad(date.getUTCMinutes());
+  const seconds = pad(date.getUTCSeconds());
+
+  // Format the date components into the desired format
+  const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  return formattedDate;
+}
 
 export const requestExternalStoragePermission = async () => {
   if (Platform.OS === 'android') {

@@ -5,7 +5,6 @@ const getContent = async DIR_PATH => {
   RNFS.mkdir(DIR_PATH);
   return await RNFS.readDir(DIR_PATH)
     .then(result => {
-      console.log('GOT RESULT', result);
       return result;
     })
     .catch(err => {
@@ -16,7 +15,6 @@ const getContent = async DIR_PATH => {
 
 export const handleSounds = async ({stationName, sounds}) => {
   const DIR_PATH = `${RNFS.DocumentDirectoryPath}/station_sounds/${stationName}`;
-  console.log(DIR_PATH);
   const result = await getContent(DIR_PATH);
   const downloads = sounds.map(data => {
     const {url, _id} = data ?? {};
@@ -34,9 +32,7 @@ export const handleSounds = async ({stationName, sounds}) => {
   });
 
   let filteredArray = downloads.filter(Boolean);
-  await Promise.all(filteredArray).then(res => {
-    console.log('finished', res);
-  });
+  await Promise.all(filteredArray).then(res => {});
 };
 
 export const loadSounds = ({sounds}) => {

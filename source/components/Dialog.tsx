@@ -15,7 +15,6 @@ import React, {useState} from 'react';
 import {FlashList} from '@shopify/flash-list';
 import Colors from '../constants/Colors';
 import {RegularText, SmallText} from './Text';
-import Down from '../assets/svg/down.svg';
 import {capitalizeFirstLetter} from '../utilis/helper_functions';
 
 interface DialogProps {
@@ -344,7 +343,7 @@ export const DropDownSelector: React.FC<DropDownSelectorProps> = ({
             ? capitalizeFirstLetter(selected)
             : placeholder}
         </SmallText>
-        <Down />
+        {/* <Down /> */}
       </TouchableOpacity>
 
       <ListDialog

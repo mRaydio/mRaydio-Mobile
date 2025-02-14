@@ -56,7 +56,7 @@ const Button: React.FC<ButtonProps> = ({
       marginBottom: bottom,
       marginTop: top,
       opacity: disable || load ? 0.5 : 1,
-      padding: small ? 8 : load ? 17 : 20,
+      padding: small ? 15 : load ? 17 : 20,
       width: getPercentWidth(width),
       ...style,
     },

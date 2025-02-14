@@ -8,7 +8,6 @@ import Icon, {Icons} from './Icons';
 import {useRoomContext} from '@livekit/react-native';
 import TrackPlayer from 'react-native-track-player';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
-import Animated from 'react-native-reanimated';
 import {SharedElement} from 'react-navigation-shared-element';
 
 const CurrentStation = () => {
@@ -18,6 +17,7 @@ const CurrentStation = () => {
   const setCurrentStation = useCurrentStation(state => state.setCurrentStation);
 
   const {name, stationName, picture} = currentStation ?? {};
+
   const navigation = useNavigation();
   useFocusEffect(
     React.useCallback(() => {
@@ -32,7 +32,7 @@ const CurrentStation = () => {
         navigation.navigate('ViewStation');
       }}
       style={{
-        backgroundColor: '#4C52AF90',
+        backgroundColor: '#4C52AF',
         position: 'absolute',
         bottom: 15,
         left: 15,
@@ -44,7 +44,7 @@ const CurrentStation = () => {
         paddingHorizontal: 10,
         paddingRight: 15,
       }}>
-      <SharedElement id={`station_image`}>
+      <SharedElement id={`station_image_${stationName}`}>
         <FastImage
           sharedTransitionTag="tag"
           source={{uri: picture}}
@@ -58,12 +58,12 @@ const CurrentStation = () => {
         />
       </SharedElement>
       <View style={{flex: 1}}>
-        <SharedElement id={`station_name`}>
+        <SharedElement id={`station_name_${stationName}`}>
           <RegularText style={{fontSize: 15, marginBottom: 3}}>
             {name}
           </RegularText>
         </SharedElement>
-        <SharedElement id={`station_stationName`}>
+        <SharedElement id={`station_stationName_${stationName}`}>
           <SmallText>{stationName}</SmallText>
         </SharedElement>
       </View>

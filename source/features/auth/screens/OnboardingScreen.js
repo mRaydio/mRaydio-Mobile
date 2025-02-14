@@ -186,12 +186,14 @@ const OnboardingScreen = ({navigation}) => {
           }}>
           <Button
             onPress={() => {
-              navigation.navigate('BottomNav');
+              navigation.navigate('CreateAccountScreen');
             }}
-            bottom={20}
             title="Create Account"
           />
           <SmallText
+            style={{
+              paddingVertical: 25,
+            }}
             onPress={() => {
               navigation.navigate('LoginScreen');
             }}>

@@ -24,10 +24,9 @@ import Colors from 'constants/Colors';
 import {SCREEN_WIDTH} from 'constants/Variables';
 import {BackButton} from 'components/IconButton';
 import Selector from 'components/Selector';
-import TrackPlayer from 'react-native-track-player';
+import TrackPlayer, {useProgress} from 'react-native-track-player';
 import {eventhandler} from '../utilis/eventhandler';
 import {ConnectionState} from '../components/ConnectionState';
-import LottieView from 'lottie-react-native';
 import {useCurrentStation} from 'services/store';
 import {playTrackFromMeta} from '../utilis/helper';
 import {SharedElement} from 'react-navigation-shared-element';
@@ -42,7 +41,8 @@ const RoomView = ({token}) => {
   localParticipant.setMicrophoneEnabled(false);
   useEffect(() => {
     const connect = async () => {
-      await room.connect(LIVEKIT_URL, token, {});
+      await room.connect(LIVEKIT_URL, token);
+
       await playTrackFromMeta(room.metadata);
     };
     connect();
@@ -184,9 +184,14 @@ const Station = ({
   stationsList,
   token,
 }) => {
+  const {position, duration} = useProgress();
+  if (position && duration && position >= duration) {
+    TrackPlayer.stop();
+  }
+
   return (
     <>
-      <SharedElement id={`station_image`}>
+      <SharedElement id={`station_image_${stationName}`}>
         <FastImage
           source={{uri: picture}}
           sharedTransitionTag="tag"
@@ -200,10 +205,10 @@ const Station = ({
         />
       </SharedElement>
       <View style={{padding: 20}}>
-        <SharedElement id={`station_stationName`}>
+        <SharedElement id={`station_stationName_${stationName}`}>
           <BigText style={{fontSize: 40}}>{stationName}</BigText>
         </SharedElement>
-        <SharedElement id={`station_name`}>
+        <SharedElement id={`station_name_${stationName}`}>
           <RegularText dim>{name}</RegularText>
         </SharedElement>
       </View>
@@ -222,14 +227,16 @@ const Station = ({
     </>
   );
 };
-const ViewStation = ({route}) => {
+const ViewStation = () => {
   const currentStation = useCurrentStation(state => state.currentStation);
   const setCurrentStation = useCurrentStation(state => state.setCurrentStation);
   const updateToken = useCurrentStation(state => state.updateToken);
+  const stationName = useCurrentStation(state => state.stationName);
+  const setStationName = useCurrentStation(state => state.setStationName);
+  const room = useRoomContext();
 
-  const {picture, name} = currentStation;
+  const {picture, name} = currentStation ?? {};
   console.log('currentStation', currentStation);
-  const [stationName, setStationName] = useState('102.3');
   const [index, setIndex] = useState(0);
   const {data} = useApi({
     queryKey: [`getStationToken`, stationName],
@@ -242,7 +249,6 @@ const ViewStation = ({route}) => {
   });
 
   useEffect(() => {
-    console.log('sounds', soundList);
     const init = async () => {
       await handleSounds({stationName, sounds: soundList.sounds});
       loadSounds({sounds: soundList.sounds});
@@ -256,16 +262,12 @@ const ViewStation = ({route}) => {
     queryKey: ['getStations'],
   });
 
-  console.log('stationsList', stationsList);
-
   const {data: stationTracks} = useApi({
     queryFn: getTracks,
     queryKey: ['getTracks', stationName],
   });
 
   useEffect(() => {
-    console.log('stationTracks', stationTracks);
-
     if (stationTracks) {
       TrackPlayer.setQueue(
         stationTracks?.tracks.map(data => {
@@ -278,19 +280,24 @@ const ViewStation = ({route}) => {
   useEffect(() => {
     if (stationsList) {
       const currInd = stationsList.stations.findIndex(data => {
-        return data.stationName === stationName;
+        return data?.stationName === stationName;
       });
       setIndex(currInd);
       setCurrentStation(stationsList.stations[currInd]);
     }
   }, [stationsList]);
+
   const {token} = data ?? {};
 
   useEffect(() => {
-    if (token) {
-      console.log('updating token', token);
-      updateToken(token);
-    }
+    const init = async () => {
+      if (token) {
+        await room.disconnect();
+        console.log('updating token', token);
+        updateToken(token);
+      }
+    };
+    init();
   }, [data]);
 
   useEffect(() => {
