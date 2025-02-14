@@ -8,7 +8,6 @@ import {PermissionsAndroid, Platform} from 'react-native';
 // } from '@react-native-firebase/messaging';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import TestScreen from '../screens/TestScreen';
 import HomeScreen from 'features/bottomtabs/home/HomeScreen';
 import Icon, {Icons} from 'components/Icons';
 import SearchScreen from 'features/bottomtabs/search/SearchScreen';
